@@ -1,0 +1,20 @@
+{
+  "name": "arya-math",
+  "version": "1.0.0",
+  "description": "A mini numerical computation library",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -w"
+  },
+  "keywords": [
+    "math",
+    "numerical computation",
+    "linear algebra"
+  ],
+  "author": "Swagatmitra Bhattacharya <swagatmitrabhattacharya18@gmail.com> (https://swagatmitrab.vercel.app)",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
