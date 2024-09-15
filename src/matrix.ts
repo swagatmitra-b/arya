@@ -1,4 +1,4 @@
-import { pow, round } from "../utils/mathUtils";
+import { pow, round } from "./utils/mathUtils";
 import { Cramer } from "./cramer";
 import { Vector2, Vector3 } from "./vector";
 
@@ -19,13 +19,13 @@ export class Matrix2D {
    * The plain 2D Array representation of the matrix
    */
 
-  raw: number[][];
+  private _raw: number[][];
 
   /**
    * The `Float32Array` repsentation of the matrix
    */
 
-  data: Float32Array[];
+  private _data: Float32Array[];
 
   constructor(
     private values: number[][] = [
@@ -34,10 +34,10 @@ export class Matrix2D {
       [0, 0, 1],
     ]
   ) {
-    this.raw = values;
-    this.data = this.toTyped(values);
-    this.rows = this.data.length;
-    this.cols = this.data[0].length;
+    this._raw = values;
+    this._data = this.toTyped(values);
+    this.rows = this._data.length;
+    this.cols = this._data[0].length;
   }
 
   private toTyped(vals: number[][]) {
@@ -50,11 +50,27 @@ export class Matrix2D {
   }
 
   /**
+   * The plain 2D Array representation of the matrix
+   */
+
+  get raw() {
+    return this.clone()._raw;
+  }
+
+  /**
+   * The `Float32Array` repsentation of the matrix
+   */
+
+  get data() {
+    return this.clone()._data;
+  }
+
+  /**
    * Dimensions of the matrix
    * @returns A tuple consisting of the number of rows and columns in this matrix
    */
 
-  dim() {
+  dim(): [number, number] {
     return [this.rows, this.cols];
   }
 
@@ -76,15 +92,15 @@ export class Matrix2D {
   add(mat: Matrix2D) {
     if (this.cols != mat.cols || this.rows != mat.rows)
       throw Error("Matrices cannot be added");
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.rows; i++) {
       let row: number[] = [];
       for (let j = 0; j < this.cols; j++)
-        row.push(this.data[i][j] + mat.data[i][j]);
-      this.raw.push(row);
+        row.push(this._data[i][j] + mat.data[i][j]);
+      this._raw.push(row);
     }
 
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   addMut(mat: Matrix2D) {
@@ -92,7 +108,7 @@ export class Matrix2D {
       throw Error("Matrices cannot be added");
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] += mat.data[i][j];
+        this._data[i][j] += mat.data[i][j];
         this.values[i][j] += mat.values[i][j];
       }
     }
@@ -108,15 +124,15 @@ export class Matrix2D {
   sub(mat: Matrix2D) {
     if (this.cols != mat.cols || this.rows != mat.rows)
       throw Error("Matrices cannot be subtracted");
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.rows; i++) {
       let row: number[] = [];
       for (let j = 0; j < this.cols; j++)
-        row.push(this.data[i][j] - mat.data[i][j]);
-      this.raw.push(row);
+        row.push(this._data[i][j] - mat.data[i][j]);
+      this._raw.push(row);
     }
 
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   subMut(mat: Matrix2D) {
@@ -124,7 +140,7 @@ export class Matrix2D {
       throw Error("Matrices cannot be added");
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] -= mat.data[i][j];
+        this._data[i][j] -= mat.data[i][j];
         this.values[i][j] -= mat.values[i][j];
       }
     }
@@ -138,21 +154,21 @@ export class Matrix2D {
    */
 
   scalarAdd(val: number) {
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.rows; i++) {
       let row: number[] = [];
-      for (let j = 0; j < this.cols; j++) row.push(this.data[i][j] + val);
-      this.raw.push(row);
+      for (let j = 0; j < this.cols; j++) row.push(this._data[i][j] + val);
+      this._raw.push(row);
     }
 
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   scalarAddMut(val: number) {
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] + val;
-        this.values[i][j] + val;
+        this._data[i][j] += val;
+        this.values[i][j] += val;
       }
     }
     return this;
@@ -165,21 +181,21 @@ export class Matrix2D {
    */
 
   scalarMul(val: number) {
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.rows; i++) {
       let row: number[] = [];
-      for (let j = 0; j < this.cols; j++) row.push(this.data[i][j] * val);
-      this.raw.push(row);
+      for (let j = 0; j < this.cols; j++) row.push(this._data[i][j] * val);
+      this._raw.push(row);
     }
 
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   scalarMulMut(val: number) {
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        this.data[i][j] * val;
-        this.values[i][j] * val;
+        this._data[i][j] *= val;
+        this.values[i][j] *= val;
       }
     }
     return this;
@@ -193,19 +209,19 @@ export class Matrix2D {
 
   matMultiply(mat: Matrix2D) {
     if (this.cols != mat.rows) throw Error("Matrices are not comformable");
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.rows; i++) {
       let row: number[] = [];
       for (let k = 0; k < mat.cols; k++) {
         let val = 0;
         for (let j = 0; j < this.cols; j++) {
-          val += this.data[i][j] * mat.data[j][k];
+          val += this._data[i][j] * mat.data[j][k];
         }
         row.push(val);
       }
-      this.raw.push(row);
+      this._raw.push(row);
     }
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   /**
@@ -214,22 +230,22 @@ export class Matrix2D {
    */
 
   transpose() {
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < this.cols; i++) {
       let row: number[] = [];
       for (let j = 0; j < this.rows; j++) {
-        row.push(this.data[j][i]);
+        row.push(this._data[j][i]);
       }
-      this.raw.push(row);
+      this._raw.push(row);
     }
 
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   transposeMut() {
     for (let i = 0; i < this.cols; i++) {
       for (let j = 0; j < this.rows; j++) {
-        this.data[i][j] = this.data[j][i];
+        this._data[i][j] = this._data[j][i];
         this.values[i][j] = this.values[j][i];
       }
     }
@@ -242,8 +258,8 @@ export class Matrix2D {
    */
 
   toVector2() {
-    if (this.data[0].length > 1) throw Error("Matrix is not linear");
-    return new Vector2(this.data[0][0], this.data[1][0]);
+    if (this._data[0].length > 1) throw Error("Matrix is not linear");
+    return new Vector2(this._data[0][0], this._data[1][0]);
   }
 
   /**
@@ -252,8 +268,8 @@ export class Matrix2D {
    */
 
   toVector3() {
-    if (this.data[0].length > 1) throw Error("Matrix is not linear");
-    return new Vector3(this.data[0][0], this.data[1][0], this.data[2][0]);
+    if (this._data[0].length > 1) throw Error("Matrix is not linear");
+    return new Vector3(this._data[0][0], this._data[1][0], this._data[2][0]);
   }
 
   /**
@@ -264,7 +280,7 @@ export class Matrix2D {
   trace() {
     let trace = 0;
     for (let i = 0; i < this.rows; i++) {
-      trace += this.data[i][i];
+      trace += this._data[i][i];
     }
     return trace;
   }
@@ -282,15 +298,15 @@ export class Matrix2D {
    */
 
   getMinorMatrix(row: number, col: number, mat: Matrix2D = this) {
-    this.raw = [];
+    this._raw = [];
     for (let i = 0; i < mat.rows; i++) {
       let rowMatrix: number[] = [];
       for (let j = 0; j < mat.cols; j++) {
         if (i != row && j != col) rowMatrix.push(mat.data[i][j]);
       }
-      if (rowMatrix.length) this.raw.push(rowMatrix);
+      if (rowMatrix.length) this._raw.push(rowMatrix);
     }
-    return new Matrix2D(this.raw);
+    return new Matrix2D(this._raw);
   }
 
   /**
@@ -315,7 +331,7 @@ export class Matrix2D {
         val += mat.data[0][i] * newVal * pow(-1, i);
       }
     }
-    return round(val * 100) / 100;
+    return round(val * 1000) / 1000;
   }
 
   /**
@@ -359,15 +375,15 @@ export class Matrix2D {
 
   exp(power: number) {
     let res = new Matrix2D(this.values);
-    for (let i = 0; i < power; i++) res = res.matMultiply(this);
+    for (let i = 0; i < power - 1; i++) res = res.matMultiply(this);
     return res;
   }
 
   expMut(power: number) {
     let res = new Matrix2D(this.values);
     for (let i = 0; i < power; i++) res = res.matMultiply(this);
-    this.data = this.toTyped(res.raw);
-    this.values = res.raw;
+    this._data = this.toTyped(res._raw);
+    this.values = res._raw;
     return this;
   }
 
@@ -380,18 +396,19 @@ export class Matrix2D {
   stripCol(idx: number) {
     let clone = this.clone();
     for (let i = 0; i < this.rows; i++) {
-      clone.raw[i].splice(idx, 1);
+      clone._raw[i].splice(idx, 1);
     }
-    return new Matrix2D(clone.raw);
+    return new Matrix2D(clone._raw);
   }
 
   stripColMut(idx: number) {
     let clone = this.clone();
     for (let i = 0; i < this.rows; i++) {
-      clone.raw[i].splice(idx, 1);
+      clone._raw[i].splice(idx, 1);
     }
-    this.data = this.toTyped(clone.raw);
-    this.values = clone.raw;
+    this._data = this.toTyped(clone._raw);
+    this.values = clone._raw;
+    this.cols -= 1;
     return this;
   }
 
@@ -403,15 +420,16 @@ export class Matrix2D {
 
   stripRow(idx: number) {
     let clone = this.clone();
-    clone.raw.splice(idx, 1);
-    return new Matrix2D(clone.raw);
+    clone._raw.splice(idx, 1);
+    return new Matrix2D(clone._raw);
   }
 
   stripRowMut(idx: number) {
     let clone = this.clone();
-    clone.raw.splice(idx, 1);
-    this.data = this.toTyped(clone.raw);
-    this.values = clone.raw;
+    clone._raw.splice(idx, 1);
+    this._data = this.toTyped(clone._raw);
+    this.values = clone._raw;
+    this.rows -= 1;
     return this;
   }
 
@@ -424,9 +442,9 @@ export class Matrix2D {
    */
 
   updateValue(i: number, j: number, val: number) {
-    this.raw = this.values;
-    this.data[i][j] = val;
-    this.raw[i][j] = val;
+    this._raw = this.values;
+    this._data[i][j] = val;
+    this._raw[i][j] = val;
     return this;
   }
 
@@ -460,81 +478,81 @@ export class Matrix2D {
         throw Error(
           `${r1}x${c1} and ${r2}x${c2} matrices cannot be concatenated in this axis`
         );
-      this.raw = [];
+      this._raw = [];
       for (let i = 0; i < this.rows; i++) {
         let row: number[] = [];
         for (let j = 0; j < this.cols + mat.cols; j++) {
           if (j < this.cols) row.push(this.data[i][j]);
           else row.push(mat.data[i][j - this.cols]);
         }
-        this.raw.push(row);
+        this._raw.push(row);
       }
-      return new Matrix2D(this.raw);
+      return new Matrix2D(this._raw);
     } else if (axis == 1) {
       if (c1 != c2)
         throw Error(
           `${r1}x${c1} and ${r2}x${c2} matrices cannot be concatenated in this axis`
         );
-      this.raw = [];
+      this._raw = [];
       for (let i = 0; i < this.rows + mat.rows; i++) {
         let row: number[] = [];
         for (let j = 0; j < this.cols; j++) {
-          if (i < this.rows) row.push(this.data[i][j]);
+          if (i < this.rows) row.push(this._data[i][j]);
           else row.push(mat.data[i - this.rows][j]);
         }
-        this.raw.push(row);
+        this._raw.push(row);
       }
-      return new Matrix2D(this.raw);
+      return new Matrix2D(this._raw);
     }
   }
 
   /**
    * Replaces a column of the matrix with a new set of values
    * @param idx The index of the target column (0-based index)
-   * @param data An array consisting of the new values
+   * @param _data An array consisting of the new values
    * @returns A new `Matrix2D` object
    */
 
-  replaceCol(idx: number, data: Float32Array) {
-    let clone = this.clone();
+  replaceCol(idx: number, data: number[]) {
+    let raw = this.clone().raw;
     for (let i = 0; i < this.rows; i++) {
-      clone.data[i][idx] = data[i];
+      raw[i][idx] = data[i];
     }
-    return new Matrix2D(clone.raw);
+    return new Matrix2D(raw);
   }
 
-  replaceColMut(idx: number, data: Float32Array) {
-    let clone = this.clone();
+  replaceColMut(idx: number, data: number[]) {
+    let raw = this.clone().raw;
     for (let i = 0; i < this.rows; i++) {
-      clone.data[i][idx] = data[i];
+      raw[i][idx] = data[i];
     }
-    this.data = this.toTyped(clone.raw);
-    this.values = clone.raw;
+    this._data = this.toTyped(raw);
+    this.values = raw;
     return this;
   }
 
   /**
    * Replaces a row of the matrix with a new set of values
    * @param idx The index of the target row (0-based index)
-   * @param data An array consisting of the new values
+   * @param _data An array consisting of the new values
    * @returns A new `Matrix2D` object
    */
 
   replaceRow(idx: number, data: number[]) {
-    let clone = this.clone();
-    for (let i = 0; i < this.cols; i++) {
-      clone.data[idx][i] = data[i];
+    let raw = this.clone()._raw;
+    for (let i = 0; i < this.rows; i++) {
+      raw[idx][i] = data[i];
     }
-    return new Matrix2D(clone.raw);
+    return new Matrix2D(raw);
   }
 
   replaceRowMut(idx: number, data: number[]) {
-    let clone = this.clone();
-    for (let i = 0; i < this.cols; i++) {
-      clone.data[idx][i] = data[i];
+    let raw = this.clone()._raw;
+    for (let i = 0; i < this.rows; i++) {
+      raw[idx][i] = data[i];
     }
-    this.data = this.toTyped(clone.raw);
-    this.values = clone.raw;
+    this._data = this.toTyped(raw);
+    this.values = raw;
     return this;
   }
 
@@ -548,7 +566,7 @@ export class Matrix2D {
       throw Error("Dimensions do not match");
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        if (this.data[i][j] != mat.data[i][j]) return false;
+        if (this._data[i][j] != mat.data[i][j]) return false;
       }
     }
     return true;

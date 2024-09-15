@@ -1,5 +1,5 @@
 import { Matrix2D } from "./matrix";
-import { sin, cos, sqrt, pow, atan2, acos, round } from "../utils/mathUtils"
+import { sin, cos, sqrt, pow, atan2, acos, round } from "./utils/mathUtils";
 
 export class Vector2 {
   constructor(public x: number = 1, public y: number = 1) {
@@ -99,7 +99,7 @@ export class Vector2 {
    */
 
   dot(vec: Vector2 | Vector3) {
-    return round((this.x * vec.x + this.y * vec.y) * 100) / 100;
+    return round((this.x * vec.x + this.y * vec.y) * 1000) / 1000;
   }
 
   /**
@@ -109,7 +109,7 @@ export class Vector2 {
    */
 
   area(vec: Vector2) {
-    return round((this.x * vec.y - this.y * vec.x) * 100) / 100;
+    return round((this.x * vec.y - this.y * vec.x) * 1000) / 1000;
   }
 
   /**
@@ -135,7 +135,7 @@ export class Vector2 {
    */
 
   slope() {
-    return round(atan2(this.y, this.x) * 100) / 100;
+    return round(atan2(this.y, this.x) * 1000) / 1000;
   }
 
   /**
@@ -146,7 +146,7 @@ export class Vector2 {
 
   angleBetween(vec: Vector2) {
     return acos(
-      round((this.dot(vec) / (this.length() * vec.length())) * 100) / 100
+      round((this.dot(vec) / (this.length() * vec.length())) * 1000) / 1000
     );
   }
 
@@ -323,7 +323,7 @@ export class Vector3 {
    */
 
   dot(vec: Vector3 | Vector2) {
-    return round((this.x * vec.x + this.y * vec.y + this.z * 0) * 100) / 100;
+    return round((this.x * vec.x + this.y * vec.y + this.z * 0) * 1000) / 1000;
   }
 
   /**
@@ -367,7 +367,7 @@ export class Vector3 {
 
   angleBetween(vec: Vector3) {
     return acos(
-      round((this.dot(vec) / (this.length() * vec.length())) * 100) / 100
+      round((this.dot(vec) / (this.length() * vec.length())) * 1000) / 1000
     );
   }
 

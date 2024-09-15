@@ -1,5 +1,12 @@
-import { round } from "../utils/mathUtils";
+import { round } from "./utils/mathUtils";
 import { Matrix2D } from "./matrix";
+
+export type CramerType = {
+  result: string;
+  x: number;
+  y: number;
+  z: number;
+};
 
 export class Cramer {
   /**
@@ -25,28 +32,28 @@ export class Cramer {
         const d2 = -this.equationSet.stripCol(1).det();
         const d = this.equationSet.stripCol(2).det();
         return {
-          result: "Unique solution",
-          x: round((d1 / d) * 100) / 100,
-          y: round((d2 / d) * 100) / 100,
+          result: "Unique Solution",
+          x: round((d1 / d) * 1000) / 1000,
+          y: round((d2 / d) * 1000) / 1000,
         };
       } else if (
         data[0][0] / data[1][0] == data[0][1] / data[1][1] &&
         data[0][1] / data[1][1] == data[0][2] / data[1][2]
       ) {
         return {
-          result: "Infinite solutions",
+          result: "Infinite Solutions",
           x: null,
           y: null,
         };
       } else {
         return {
-          result: "No solution",
+          result: "No Solution",
           x: null,
           y: null,
         };
       }
     } else if (this.equationSet.cols == 4 && this.equationSet.rows == 3) {
-      const constant = this.equationSet.transpose().data[3];
+      const constant = this.equationSet.transpose().raw[3];
       const mat = this.equationSet.stripCol(3);
       const d = mat.det();
       const d1 = mat.replaceCol(0, constant).det();
@@ -56,9 +63,9 @@ export class Cramer {
       if (d != 0) {
         return {
           result: "Unique Solution",
-          x: round((d1 / d) * 100) / 100,
-          y: round((d2 / d) * 100) / 100,
-          z: round((d3 / d) * 100) / 100,
+          x: round((d1 / d) * 1000) / 1000,
+          y: round((d2 / d) * 1000) / 1000,
+          z: round((d3 / d) * 1000) / 1000,
         };
       } else {
         if (d1 != 0 || d2 != 0 || d3 != 0) {
