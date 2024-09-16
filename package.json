@@ -1,15 +1,20 @@
 {
   "name": "arya-math",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "A mini numerical-computation library",
-  "main": "/src",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/swagatmitra-b/arya.git"
   },
   "scripts": {
     "test": "ts-node tests/tests.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "keywords": [
     "math",

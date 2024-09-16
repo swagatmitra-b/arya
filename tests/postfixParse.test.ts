@@ -1,5 +1,5 @@
 import { yes } from "./helper";
-import { parseP, evaluateExp } from "../src/postfix";
+import { parseP, evaluateExp } from "../src/evaluateExp";
 
 export function postfixTest() {
   yes("1", parseP("A+B*C-D"), "ABC*+D-");

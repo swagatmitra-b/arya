@@ -10,6 +10,7 @@ const precedence: Record<string, number> = {
 const isRightAssociative = (op: string) => op == "^";
 const operators = Object.keys(precedence);
 
+
 export function parseP(s: string) {
   let output = "";
   let opStack = [];
@@ -52,6 +53,27 @@ export function parseP(s: string) {
 
   return output;
 }
+
+/**
+ * Evaluate an algebraic expression
+ * @param vals An object that specifies the values of the variables  
+ * @param s The expression string
+ * @returns The final expression value after substitution
+ * 
+ * @example  
+ * ```typescript
+ * import { evaluateExp } from "arya-math";
+ * 
+ * const result = evaluateExp(
+ * {
+ *    x: 2,
+ *    y: 3
+ * }, 
+ * "2x + y(2x^y + yx) + 8y(y+2)") 
+ * 
+ * console.log(result) // 190
+ * ``` 
+ */
 
 export function evaluateExp(vals: Record<string, number>, s: string): number {
   s = fixString(s);
