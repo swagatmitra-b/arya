@@ -20,8 +20,8 @@ export function cramerTest() {
   });
   yes("threeVar", threeVar.solve() as CramerType, {
     result: "Unique Solution",
-    x: -0.79,
-    y: 1.27,
-    z: -0.65,
+    x: -0.790,
+    y: 1.271,
+    z: -0.652,
   });
 }

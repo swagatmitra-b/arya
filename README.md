@@ -25,7 +25,7 @@ solve a system of linear equations
 ```typescript
 const system = new Cramer([
   [7, 1, -5, -1], // 7x + y - 5 = -1
-  [4, 3, 1, 0], // 4x + 3y + 1 = 0
+  [4, 3, 1, 0], // 5x + 3y + 1 = 0
   [6, 9, -2, 8], // 6x + 9y - 2 = 8
 ]);
 
@@ -42,4 +42,5 @@ const vec = new Vector3(2, 3, 4);
 
 const transformation = vec.scale(3).cross(new Vector3(3, 5, 0)).length(); // 70.035
 ```
- Please feel free to contribute. Thanks! :)
+
+Please feel free to contribute. Thanks! :)
