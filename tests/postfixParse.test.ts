@@ -1,5 +1,5 @@
 import { yes } from "./helper";
-import { evaluateP, parseP } from "../src/postfix";
+import { parseP, evaluateExp } from "../src/postfix";
 
 export function postfixTest() {
   yes("1", parseP("A+B*C-D"), "ABC*+D-");
@@ -12,7 +12,7 @@ export function postfixTest() {
 export function evalPostFixTest() {
   yes(
     "1",
-    evaluateP(
+    evaluateExp(
       {
         A: 1,
         B: 2,
@@ -25,7 +25,7 @@ export function evalPostFixTest() {
   );
   yes(
     "2",
-    evaluateP(
+    evaluateExp(
       {
         A: 2,
         B: 3,
@@ -37,8 +37,8 @@ export function evalPostFixTest() {
     7.33
   );
   yes(
-    "5",
-    evaluateP(
+    "3",
+    evaluateExp(
       {
         A: 2,
         B: 4,
@@ -50,5 +50,16 @@ export function evalPostFixTest() {
       "A/B+(C-D)*E^(F-2*3)+3*8"
     ),
     24.5
+  );
+  yes(
+    "4",
+    evaluateExp(
+      {
+        x: 2,
+        y: 3,
+      },
+      "2x + y(2x^y + yx) + 8y(y+2)"
+    ),
+    190
   );
 }
