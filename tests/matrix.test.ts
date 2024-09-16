@@ -53,8 +53,8 @@ export function matrixTest() {
       [7, 8, 0],
     ])
   );
-  yes("stripColMut", subject.stripColMut(1), subject);
-  yes("stripRowMut", subject.stripRowMut(1), subject);
+  yes("stripColIn", subject.stripColIn(1), subject);
+  yes("stripRowIn", subject.stripRowIn(1), subject);
   yes(
     "replaceCol",
     subject.replaceCol(1, [4, 0]),
@@ -71,8 +71,8 @@ export function matrixTest() {
       [6, 9],
     ])
   );
-  yes("replaceColMut", subject.replaceColMut(1, [4, 0]), subject);
-  yes("replaceRowMut", subject.replaceRowMut(1, [2, 2]), subject);
+  yes("replaceColIn", subject.replaceColIn(1, [4, 0]), subject);
+  yes("replaceRowIn", subject.replaceRowIn(1, [2, 2]), subject);
   yes(
     "add",
     subject.add(subject),
@@ -81,7 +81,7 @@ export function matrixTest() {
       [4, 4],
     ])
   );
-  yes("addMut", subject.addMut(subject), subject);
+  yes("addIn", subject.addIn(subject), subject);
   yes(
     "matMultiply",
     subject.matMultiply(

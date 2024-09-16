@@ -103,7 +103,7 @@ export class Matrix2D {
     return new Matrix2D(this._raw);
   }
 
-  addMut(mat: Matrix2D) {
+  addIn(mat: Matrix2D) {
     if (this.cols != mat.cols || this.rows != mat.rows)
       throw Error("Matrices cannot be added");
     for (let i = 0; i < this.rows; i++) {
@@ -135,7 +135,7 @@ export class Matrix2D {
     return new Matrix2D(this._raw);
   }
 
-  subMut(mat: Matrix2D) {
+  subIn(mat: Matrix2D) {
     if (this.cols != mat.cols || this.rows != mat.rows)
       throw Error("Matrices cannot be added");
     for (let i = 0; i < this.rows; i++) {
@@ -164,7 +164,7 @@ export class Matrix2D {
     return new Matrix2D(this._raw);
   }
 
-  scalarAddMut(val: number) {
+  scalarAddIn(val: number) {
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
         this._data[i][j] += val;
@@ -191,7 +191,7 @@ export class Matrix2D {
     return new Matrix2D(this._raw);
   }
 
-  scalarMulMut(val: number) {
+  scalarMulIn(val: number) {
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
         this._data[i][j] *= val;
@@ -242,7 +242,7 @@ export class Matrix2D {
     return new Matrix2D(this._raw);
   }
 
-  transposeMut() {
+  transposeIn() {
     for (let i = 0; i < this.cols; i++) {
       for (let j = 0; j < this.rows; j++) {
         this._data[i][j] = this._data[j][i];
@@ -379,7 +379,7 @@ export class Matrix2D {
     return res;
   }
 
-  expMut(power: number) {
+  expIn(power: number) {
     let res = new Matrix2D(this.values);
     for (let i = 0; i < power; i++) res = res.matMultiply(this);
     this._data = this.toTyped(res._raw);
@@ -401,7 +401,7 @@ export class Matrix2D {
     return new Matrix2D(clone._raw);
   }
 
-  stripColMut(idx: number) {
+  stripColIn(idx: number) {
     let clone = this.clone();
     for (let i = 0; i < this.rows; i++) {
       clone._raw[i].splice(idx, 1);
@@ -424,7 +424,7 @@ export class Matrix2D {
     return new Matrix2D(clone._raw);
   }
 
-  stripRowMut(idx: number) {
+  stripRowIn(idx: number) {
     let clone = this.clone();
     clone._raw.splice(idx, 1);
     this._data = this.toTyped(clone._raw);
@@ -521,7 +521,7 @@ export class Matrix2D {
     return new Matrix2D(raw);
   }
 
-  replaceColMut(idx: number, data: number[]) {
+  replaceColIn(idx: number, data: number[]) {
     let raw = this.clone().raw;
     for (let i = 0; i < this.rows; i++) {
       raw[i][idx] = data[i];
@@ -546,7 +546,7 @@ export class Matrix2D {
     return new Matrix2D(raw);
   }
 
-  replaceRowMut(idx: number, data: number[]) {
+  replaceRowIn(idx: number, data: number[]) {
     let raw = this.clone()._raw;
     for (let i = 0; i < this.rows; i++) {
       raw[idx][i] = data[i];

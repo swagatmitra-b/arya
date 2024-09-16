@@ -25,21 +25,22 @@ export function parseP(s: string) {
       }
       opStack.pop();
     } else if (operators.includes(token)) {
+      let lastOp = opStack[opStack.length - 1];
       if (
         !opStack.length ||
-        opStack[opStack.length - 1] == "(" ||
-        precedence[token] > precedence[opStack[opStack.length - 1]] ||
-        (precedence[token] == precedence[opStack[opStack.length - 1]] &&
-          isRightAssociative(token))
+        lastOp == "(" ||
+        precedence[token] > precedence[lastOp] ||
+        (precedence[token] == precedence[lastOp] && isRightAssociative(token))
       )
         opStack.push(token);
       else {
         while (
-          precedence[token] < precedence[opStack[opStack.length - 1]] ||
-          (precedence[token] == precedence[opStack[opStack.length - 1]] &&
+          precedence[token] < precedence[lastOp] ||
+          (precedence[token] == precedence[lastOp] &&
             !isRightAssociative(token))
         ) {
           output += opStack.pop();
+          lastOp = opStack[opStack.length - 1];
         }
         opStack.push(token);
       }
@@ -95,6 +96,9 @@ const isChar = (s: string, i: number) =>
 const satisfyNum = (s: string, si: number, ti: number) =>
   isNaN(parseFloat(s[si])) || isNaN(parseFloat(s[ti]));
 
+const check = (s: string, i: number, l: number, p: ")" | "(") =>
+  !operators.includes(s[i + l]) && s[i + l] != p && satisfyNum(s, i, i + l);
+
 function fixString(s: string) {
   s = [...s].filter((str) => str != " ").join("");
   let positions = new Set<number>();
@@ -102,36 +106,12 @@ function fixString(s: string) {
   for (let i = 0; i < s.length; i++) {
     if (isChar(s, i)) {
       if (i == 0) {
-        if (
-          !operators.includes(s[i + 1]) &&
-          s[i + 1] != ")" &&
-          satisfyNum(s, i, i + 1)
-        ) {
-          positions.add(i + 1);
-        }
+        if (check(s, i, 1, ")")) positions.add(i + 1);
       } else if (i == s.length - 1) {
-        if (
-          !operators.includes(s[i - 1]) &&
-          s[i - 1] != "(" &&
-          satisfyNum(s, i, i - 1)
-        ) {
-          positions.add(i);
-        }
+        if (check(s, i, -1, "(")) positions.add(i);
       } else {
-        if (
-          !operators.includes(s[i + 1]) &&
-          s[i + 1] != ")" &&
-          satisfyNum(s, i, i + 1)
-        ) {
-          positions.add(i + 1);
-        }
-        if (
-          !operators.includes(s[i - 1]) &&
-          s[i - 1] != "(" &&
-          satisfyNum(s, i, i - 1)
-        ) {
-          positions.add(i);
-        }
+        if (check(s, i, 1, ")")) positions.add(i + 1);
+        if (check(s, i, -1, "(")) positions.add(i);
       }
     }
   }

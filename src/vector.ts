@@ -36,7 +36,7 @@ export class Vector2 {
     return new Vector2(this.x + vec.x, this.y + vec.y);
   }
 
-  addMut(vec: Vector2) {
+  addIn(vec: Vector2) {
     this.x += vec.x;
     this.y += vec.y;
     return this;
@@ -53,7 +53,7 @@ export class Vector2 {
     return new Vector2(this.x - vec.x, this.y - vec.y);
   }
 
-  subMut(vec: Vector2) {
+  subIn(vec: Vector2) {
     this.x -= vec.x;
     this.y -= vec.y;
     return this;
@@ -70,7 +70,7 @@ export class Vector2 {
     return new Vector2(this.x + val, this.y + val);
   }
 
-  scalarAddMut(val: number) {
+  scalarAddIn(val: number) {
     this.x += val;
     this.y += val;
     return this;
@@ -86,7 +86,7 @@ export class Vector2 {
     return new Vector2(this.x * f, this.y * f);
   }
 
-  scaleMut(f: number) {
+  scaleIn(f: number) {
     this.x *= f;
     this.y *= f;
     return this;
@@ -122,7 +122,7 @@ export class Vector2 {
     return new Vector2(this.x / length, this.y / length);
   }
 
-  normalizeMut() {
+  normalizeIn() {
     let length = this.length();
     this.x /= length;
     this.y /= length;
@@ -175,7 +175,7 @@ export class Vector2 {
       .toVector2();
   }
 
-  rotateMut(angle: number) {
+  rotateIn(angle: number) {
     let v = this.rotate(angle);
     this.x = v.x;
     this.y = v.x;
@@ -264,7 +264,7 @@ export class Vector3 {
     return new Vector3(this.x + vec.x, this.y + vec.y, this.z + vec.z);
   }
 
-  addMut(vec: Vector3) {
+  addIn(vec: Vector3) {
     (this.x += vec.x), (this.y += vec.y), (this.z += vec.z);
     return this;
   }
@@ -280,7 +280,7 @@ export class Vector3 {
     return new Vector3(this.x - vec.x, this.y - vec.y, this.z - vec.z);
   }
 
-  subMut(vec: Vector3) {
+  subIn(vec: Vector3) {
     (this.x -= vec.x), (this.y -= vec.y), (this.z -= vec.z);
     return this;
   }
@@ -296,7 +296,7 @@ export class Vector3 {
     return new Vector3(this.x + val, this.y + val, this.z + val);
   }
 
-  scalarAddMut(val: number) {
+  scalarAddIn(val: number) {
     (this.x += val), (this.y += val), (this.z += val);
     return this;
   }
@@ -311,7 +311,7 @@ export class Vector3 {
     return new Vector3(this.x * f, this.y * f, this.z * f);
   }
 
-  scaleMut(f: number) {
+  scaleIn(f: number) {
     (this.x *= f), (this.y *= f), (this.z *= f);
     return this;
   }
@@ -352,7 +352,7 @@ export class Vector3 {
     );
   }
 
-  normalizeMut() {
+  normalizeIn() {
     (this.x /= this.length()),
       (this.y /= this.length()),
       (this.z /= this.length());
@@ -409,7 +409,7 @@ export class Vector3 {
       .toVector3();
   }
 
-  rotateXMut(angle: number) {
+  rotateXIn(angle: number) {
     let v = this.rotateX(angle);
     this.x = v.x;
     this.y = v.y;
@@ -429,7 +429,7 @@ export class Vector3 {
       .toVector3();
   }
 
-  rotateYMut(angle: number) {
+  rotateYIn(angle: number) {
     let v = this.rotateY(angle);
     this.x = v.x;
     this.y = v.y;
@@ -449,7 +449,7 @@ export class Vector3 {
       .toVector3();
   }
 
-  rotateZMut(angle: number) {
+  rotateZIn(angle: number) {
     let v = this.rotateZ(angle);
     this.x = v.x;
     this.y = v.y;

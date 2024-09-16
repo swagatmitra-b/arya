@@ -2,6 +2,7 @@
   "name": "arya-math",
   "version": "1.0.0",
   "description": "A mini numerical-computation library",
+  "main": "/src",
   "repository": {
     "type": "git",
     "url": "https://github.com/swagatmitra-b/arya.git"

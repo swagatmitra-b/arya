@@ -2,7 +2,7 @@
 
 ### A mini numerical-computation library
 
-This library is an offshoot of a physics engine that's currently under development and is still at its nascent phase, so expect frequent updates!
+This library is an extended offshoot of a physics engine that's currently under development and is still at its nascent phase, so expect frequent updates!
 
 #### Usage
 
