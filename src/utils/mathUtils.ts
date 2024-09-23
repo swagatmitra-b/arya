@@ -26,7 +26,7 @@ export function prod(
 ) {
   let prod = 0;
   for (let i = 0; i < series[0].size; i++) {
-    prod += fn(i, ...series);
+    prod *= fn(i, ...series);
   }
   return prod;
 }

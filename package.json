@@ -23,7 +23,8 @@
   "keywords": [
     "math",
     "numerical computation",
-    "linear algebra"
+    "linear algebra",
+    "machine learning"
   ],
   "author": "Swagatmitra Bhattacharya <swagatmitrabhattacharya18@gmail.com> (https://swagatmitrab.vercel.app)",
   "license": "ISC",
