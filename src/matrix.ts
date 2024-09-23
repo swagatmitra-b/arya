@@ -1,6 +1,8 @@
 import { pow, round } from "./utils/mathUtils";
 import { Cramer } from "./cramer";
 import { Vector2, Vector3 } from "./vector";
+import { Series } from "./series";
+import { sum } from "./utils/mathUtils";
 
 export class Matrix2D {
   /**
@@ -390,6 +392,21 @@ export class Matrix2D {
   /**
    * Deletes a column from the matrix
    * @param idx The index of the column (0-based index)
+   * @returns A new Column
+   */
+
+  getCol(idx: number) {
+    let clone = this.clone();
+    let col = [];
+    for (let i = 0; i < this.rows; i++) {
+      col.push(clone._raw[i].splice(idx, 1)[0]);
+    }
+    return new Series(col);
+  }
+
+  /**
+   * Deletes a column from the matrix
+   * @param idx The index of the column (0-based index)
    * @returns A new `Matrix2D` object
    */
 
@@ -590,7 +607,99 @@ export class Matrix2D {
    * @returns A new `Cramer` object
    */
 
+  private checkSubmatrices(size: number, currSize: number) {
+    for (let i = 0; i < size - currSize + 1; i++) {
+      for (let j = 0; j < size - currSize + 1; j++) {
+        let matrix: number[][] = [];
+        for (let x = 0; x < currSize; x++) {
+          let row: number[] = [];
+          for (let y = 0; y < currSize; y++) {
+            row.push(this._data[x + i][y + j]);
+          }
+          matrix.push(row);
+        }
+        const a = new Matrix2D(matrix);
+        if (a.det() != 0) return currSize;
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * The Rank of a matrix
+   */
+
+  getRank(currSize = this.dim()[0] - 1): number {
+    const [rows, cols] = this.dim();
+    if (rows != cols) throw Error("Not a square matrix");
+    if (this.det() != 0) return rows;
+    const a = this.checkSubmatrices(rows, currSize);
+    if (a) return a;
+    else if (a == 0 && currSize == 1) return 0;
+    else return this.getRank(currSize - 1);
+  }
+
+  /**
+   * Convert the matrix (2x3 or 3x4) to a `Cramer` object
+   * @returns A `Cramer` object
+   */
+
   toCramer() {
     return new Cramer(this.values);
+  }
+
+  /**
+   * Get the covariance matrix with respect to another matrix
+   * @param mat The second matrix
+   * @returns A new `Matrix2D` object
+   */
+
+  cov(mat: Matrix2D) {
+    let matrix: number[][] = [];
+    for (let i = 0; i < this.cols; i++) {
+      matrix.push([]);
+      for (let j = 0; j < this.cols; j++) {
+        let aCol = this.getCol(i);
+        let bCol = mat.getCol(j);
+        let covSum = sum(
+          [aCol, bCol],
+          (k, a, b) => (a.data[k] - aCol.aMean()) * (b.data[k] - bCol.aMean())
+        );
+        matrix[i].push(covSum / (aCol.size - 1));
+      }
+    }
+    return new Matrix2D(matrix);
+  }
+
+  corr(mat: Matrix2D) {
+    let matrix: number[][] = [];
+    for (let i = 0; i < this.cols; i++) {
+      matrix.push([]);
+      for (let j = 0; j < this.cols; j++) {
+        let aCol = this.getCol(i);
+        let bCol = mat.getCol(j);
+        let aStd = Math.sqrt(
+          sum(
+            [aCol],
+            (i, a) => Math.pow(a.data[i] - aCol.aMean(), 2) / (aCol.size - 1)
+          )
+        );
+        let bStd = Math.sqrt(
+          sum(
+            [bCol],
+            (i, b) => Math.pow(b.data[i] - bCol.aMean(), 2) / (bCol.size - 1)
+          )
+        );
+        let cov =
+          sum(
+            [aCol, bCol],
+            (k, a, b) => (a.data[k] - aCol.aMean()) * (b.data[k] - bCol.aMean())
+          ) /
+          (aCol.size - 1);
+
+        matrix[i].push(cov / (aStd * bStd));
+      }
+    }
+    return new Matrix2D(matrix);
   }
 }

@@ -56,23 +56,23 @@ export function parseP(s: string) {
 
 /**
  * Evaluate an algebraic expression
- * @param vals An object that specifies the values of the variables  
+ * @param vals An object that specifies the values of the variables
  * @param s The expression string
  * @returns The final expression value after substitution
- * 
- * @example  
+ *
+ * @example
  * ```typescript
  * import { evaluateExp } from "arya-math";
- * 
+ *
  * const result = evaluateExp(
  * {
  *    x: 2,
  *    y: 3
- * }, 
- * "2x + y(2x^y + yx) + 8y(y+2)") 
- * 
+ * },
+ * "2x + y(2x^y + yx) + 8y(y+2)")
+ *
  * console.log(result) // 190
- * ``` 
+ * ```
  */
 
 export function evaluateExp(vals: Record<string, number>, s: string): number {
@@ -135,7 +135,8 @@ function fixString(s: string) {
         if (check(s, i, 1, ")")) positions.add(i + 1);
         if (check(s, i, -1, "(")) positions.add(i);
       }
-    }
+    } else if (i != s.length - 1 && s[i] == ")" && s[i + 1] == "(")
+      positions.add(i + 1);
   }
   return applyString(s, positions);
 }

@@ -95,4 +95,14 @@ export function matrixTest() {
       [32, 40],
     ])
   );
+  yes(
+    "isEqual",
+    subject.isEqual(
+      new Matrix2D([
+        [2, 8],
+        [4, 4],
+      ])
+    ),
+    true
+  );
 }
