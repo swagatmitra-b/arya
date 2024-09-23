@@ -65,4 +65,4 @@ const vec = new Vector3(2, 3, 4);
 const transformation = vec.scale(3).cross(new Vector3(3, 5, 0)).length(); // 70.035
 ```
 
-Please feel report any bugs or contribute. Thanks! :)
+Please feel free to report any bugs or contribute. Thanks! :)
