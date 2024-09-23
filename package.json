@@ -14,7 +14,11 @@
   "scripts": {
     "test": "ts-node tests/tests.ts",
     "build": "tsc",
-    "prepublishOnly": "npm run test && npm run build"
+    "prepublishOnly": "npm run test && npm run build",
+    "clean": "rm -rf dist",
+    "p sharp": "npm version patch && npm publish",
+    "p minor": "npm version minor && npm publish",
+    "p major": "npm version major && npm publish"
   },
   "keywords": [
     "math",
