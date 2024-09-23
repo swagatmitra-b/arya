@@ -16,9 +16,9 @@
     "build": "tsc",
     "prepublishOnly": "npm run test && npm run build",
     "clean": "rm -rf dist",
-    "p sharp": "npm version patch && npm publish",
-    "p minor": "npm version minor && npm publish",
-    "p major": "npm version major && npm publish"
+    "psharp": "npm version patch && npm publish",
+    "pminor": "npm version minor && npm publish",
+    "pmajor": "npm version major && npm publish"
   },
   "keywords": [
     "math",
