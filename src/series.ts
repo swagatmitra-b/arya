@@ -1,111 +1,103 @@
 import { prod, sum } from "./utils/mathUtils";
 
 export class Series {
-  /**
-   * The series data
-   */
-
-  data: Float32Array;
-
-  /**
-   * The number of data-points in the series
-   */
-
+  data: Float64Array;
   size: number;
 
-  constructor(public vals: number[]) {
-    this.data = new Float32Array(vals);
+  constructor(vals: number[] | Float64Array) {
+    this.data = vals instanceof Float64Array ? vals : new Float64Array(vals);
     this.size = this.data.length;
   }
 
   /**
-   * The arithmetic mean of the series
+   * Arithmetic mean
    */
-
-  aMean(weights: number[] = []) {
-    if (weights.length)
-      return sum(
-        [this, new Series(weights)],
-        (i, x, w) => x.data[i] * w.data[i]
-      );
-    else return sum([this]);
+  aMean(weights?: number[] | Float64Array): number {
+    if (weights && weights.length) {
+      const w = new Float64Array(weights);
+      const weightedSum = sum([this, new Series(w)], (i, x, w) => x.data[i] * w.data[i]);
+      const totalWeight = sum([new Series(w)]);
+      return weightedSum / totalWeight;
+    } else {
+      return sum([this]) / this.size;
+    }
   }
 
   /**
-   * The geometric mean of the series
+   * Geometric mean
    */
-
-  gMean(weights: number[] = []) {
-    if (weights.length)
+  gMean(weights?: number[] | Float64Array): number {
+    if (weights && weights.length) {
+      const w = new Float64Array(weights);
       return Math.pow(
-        prod([this, new Series(weights)], (i, x, w) =>
-          Math.pow(x.data[i], w.data[i])
-        ),
-        1 / this.size
+        prod([this, new Series(w)], (i, x, w) => Math.pow(x.data[i], w.data[i])),
+        1 / sum([new Series(w)])
       );
-    else return Math.pow(prod([this]), 1 / this.size);
+    } else {
+      return Math.pow(prod([this]), 1 / this.size);
+    }
   }
 
   /**
-   * The harmonic mean of the series
+   * Harmonic mean
    */
-
-  hMean(weights: number[] = []) {
-    if (weights.length) {
-      let w = new Series(weights);
-      return sum([w]) / sum([this, w], (i, x, w) => w.data[i] / x.data[i]);
-    } else return this.size / sum([this], (i, x) => 1 / x.data[i]);
+  hMean(weights?: number[] | Float64Array): number {
+    if (weights && weights.length) {
+      const w = new Float64Array(weights);
+      const weightedSum = sum([new Series(w)]);
+      const denom = sum([this, new Series(w)], (i, x, w) => w.data[i] / x.data[i]);
+      return weightedSum / denom;
+    } else {
+      return this.size / sum([this], (i, x) => 1 / x.data[i]);
+    }
   }
 
   /**
-   * The variance of the series
+   * Sample variance (unbiased)
    */
-
-  var() {
-    return (
-      sum([this], (i, x) => Math.pow(x.data[i] - x.aMean(), 2)) /
-      (this.size - 1)
-    );
+  var(): number {
+    const mean = this.aMean();
+    return sum([this], (i, x) => {
+      const diff = x.data[i] - mean;
+      return diff * diff;
+    }) / (this.size - 1);
   }
 
   /**
-   * The standard deviation of the series
+   * Standard deviation
    */
-
-  std() {
+  std(): number {
     return Math.sqrt(this.var());
   }
 
   /**
-   * The largest value of the series
+   * Maximum value
    */
-
-  max() {
+  max(): number {
     let max = this.data[0];
-    for (let i = 0; i < this.size; i++) {
+    for (let i = 1; i < this.size; i++) {
       if (this.data[i] > max) max = this.data[i];
     }
     return max;
   }
 
   /**
-   * The smallest value of the series
+   * Minimum value
    */
-
-  min() {
+  min(): number {
     let min = this.data[0];
-    for (let i = 0; i < this.size; i++) {
+    for (let i = 1; i < this.size; i++) {
       if (this.data[i] < min) min = this.data[i];
     }
     return min;
   }
 
   /**
-   * Sorts the series
-   * @param order 0 for ascending (default), 1 for descending
+   * In-place sort
    */
-
-  sort(order: 0 | 1 = 0) {
-    this.data = this.data.sort((a, b) => (order ? b - a : a - b));
+  sort(order: 0 | 1 = 0): void {
+    const sorted = Array.from(this.data).sort((a, b) => (order === 0 ? a - b : b - a));
+    this.data.set(sorted);
   }
 }
+

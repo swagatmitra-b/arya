@@ -1,5 +1,5 @@
 import { Series } from "../series";
-import { sum } from "../utils/mathUtils";
+import { abs, pow, sqrt, sum } from "../utils/mathUtils";
 
 /**
  * The Mean Squared Error
@@ -10,7 +10,7 @@ import { sum } from "../utils/mathUtils";
 
 export const MSE = (y_actual: Series, y_pred: Series) =>
   sum([y_actual, y_pred], (i, y_ac, y_pr) =>
-    Math.pow(y_ac.data[i] - y_pr.data[i], 2)
+    pow(y_ac.data[i] - y_pr.data[i], 2)
   ) / y_actual.size;
 
 /**
@@ -21,9 +21,8 @@ export const MSE = (y_actual: Series, y_pred: Series) =>
  */
 
 export const MAE = (y_actual: Series, y_pred: Series) =>
-  sum([y_actual, y_pred], (i, y_ac, y_pr) =>
-    Math.abs(y_ac.data[i] - y_pr.data[i])
-  ) / y_actual.size;
+  sum([y_actual, y_pred], (i, y_ac, y_pr) => abs(y_ac.data[i] - y_pr.data[i])) /
+  y_actual.size;
 
 /**
  * The Root Mean Squared Error
@@ -33,7 +32,7 @@ export const MAE = (y_actual: Series, y_pred: Series) =>
  */
 
 export const RMSE = (y_actual: Series, y_pred: Series) =>
-  Math.sqrt(MSE(y_actual, y_pred));
+  sqrt(MSE(y_actual, y_pred));
 
 /**
  * The R2 Error
@@ -45,8 +44,15 @@ export const RMSE = (y_actual: Series, y_pred: Series) =>
 export const R2 = (y_actual: Series, y_pred: Series) =>
   1 -
   sum([y_actual, y_pred], (i, y_actual, y_pred) =>
-    Math.pow(y_actual.data[i] - y_pred.data[i], 2)
+    pow(y_actual.data[i] - y_pred.data[i], 2)
   ) /
     sum([y_actual, y_pred], (i, y_actual, y_pred) =>
-      Math.pow(y_actual.data[i] - y_pred.aMean(), 2)
+      pow(y_actual.data[i] - y_pred.aMean(), 2)
     );
+
+export const corr = (x: Series, y: Series) =>
+  sum([x, y], (i, x, y) => (x.data[i] - x.aMean()) * (y.data[i] - y.aMean())) /
+  sqrt(
+    sum([x], (i, x) => x.data[i] - x.aMean()) *
+      sum([y], (i, y) => y.data[i] - y.aMean())
+  );

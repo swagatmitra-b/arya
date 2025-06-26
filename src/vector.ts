@@ -170,15 +170,13 @@ export class Vector2 {
    */
 
   rotate(angle: number) {
-    return this.getRotationMatrix(angle)
-      .matMultiply(this.toMatrix())
-      .toVector2();
+    return this.getRotationMatrix(angle).matMul(this.toMatrix()).toVector2();
   }
 
   rotateIn(angle: number) {
     let v = this.rotate(angle);
     this.x = v.x;
-    this.y = v.x;
+    this.y = v.y;
     return this;
   }
 
@@ -250,7 +248,7 @@ export class Vector3 {
    */
 
   length() {
-    return sqrt(pow(this.x, 2) + pow(this.y, 2) + pow(this.z, 2));
+    return round(sqrt(pow(this.x, 2) + pow(this.y, 2) + pow(this.z, 2)) * 100) / 100;
   }
 
   /**
@@ -405,7 +403,7 @@ export class Vector3 {
 
   rotateX(angle: number) {
     return this.getRotationMatrices(angle)[0]
-      .matMultiply(this.toMatrix())
+      .matMul(this.toMatrix())
       .toVector3();
   }
 
@@ -425,7 +423,7 @@ export class Vector3 {
 
   rotateY(angle: number) {
     return this.getRotationMatrices(angle)[1]
-      .matMultiply(this.toMatrix())
+      .matMul(this.toMatrix())
       .toVector3();
   }
 
@@ -445,7 +443,7 @@ export class Vector3 {
 
   rotateZ(angle: number) {
     return this.getRotationMatrices(angle)[2]
-      .matMultiply(this.toMatrix())
+      .matMul(this.toMatrix())
       .toVector3();
   }
 

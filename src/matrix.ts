@@ -1,705 +1,654 @@
-import { pow, round } from "./utils/mathUtils";
-import { Cramer } from "./cramer";
+import { pow, round, sum } from "./utils/mathUtils";
 import { Vector2, Vector3 } from "./vector";
 import { Series } from "./series";
-import { sum } from "./utils/mathUtils";
 
 export class Matrix2D {
-  /**
-   * The number of rows in the matrix
-   */
-
   rows: number;
-
-  /**
-   * The number of columns in the matrix
-   */
-
   cols: number;
+  data: Float64Array;
 
-  /**
-   * The plain 2D Array representation of the matrix
-   */
-
-  private _raw: number[][];
-
-  /**
-   * The `Float32Array` repsentation of the matrix
-   */
-
-  private _data: Float32Array[];
+  static identity(n: number): Matrix2D {
+    const data = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) data[i * n + i] = 1;
+    return new Matrix2D(data, n, n);
+  }
 
   constructor(
-    private values: number[][] = [
+    private values: number[][] | Float64Array = [
       [1, 0, 0],
       [0, 1, 0],
       [0, 0, 1],
-    ]
+    ],
+    private initRows: number = 3,
+    private initCols: number = 3
   ) {
-    this._raw = values;
-    this._data = this.toTyped(values);
-    this.rows = this._data.length;
-    this.cols = this._data[0].length;
-  }
-
-  private toTyped(vals: number[][]) {
-    let newData: Float32Array[] = [];
-    for (let i = 0; i < vals.length; i++) {
-      let row = new Float32Array(vals[i]);
-      newData.push(row);
+    if (Array.isArray(values)) {
+      const rows = values[0].length ? values.length : 1;
+      const cols = values[0].length || values.length;
+      const data = new Float64Array(rows * cols);
+      let k = 0;
+      for (let i = 0; i < rows; ++i) {
+        const row = values[i];
+        for (let j = 0; j < cols; ++j) {
+          data[k++] = row[j];
+        }
+      }
+      this.rows = rows;
+      this.cols = cols;
+      this.data = data;
+    } else {
+      if (initRows * initCols != values.length)
+        throw new Error("Please enter matrix dimensions");
+      this.rows = initRows;
+      this.cols = initCols;
+      this.data = values;
     }
-    return newData;
   }
-
-  /**
-   * The plain 2D Array representation of the matrix
-   */
-
-  get raw() {
-    return this.clone()._raw;
-  }
-
-  /**
-   * The `Float32Array` repsentation of the matrix
-   */
-
-  get data() {
-    return this.clone()._data;
-  }
-
-  /**
-   * Dimensions of the matrix
-   * @returns A tuple consisting of the number of rows and columns in this matrix
-   */
 
   dim(): [number, number] {
     return [this.rows, this.cols];
   }
 
-  /**
-   * Creates a deep copy of this matrix
-   * @returns A new `Matrix2D` object
-   */
-
   clone() {
-    return new Matrix2D(JSON.parse(JSON.stringify(this.values)));
+    return new Matrix2D(this.data, this.rows, this.cols);
   }
 
-  /**
-   * Adds this matrix with another matrix
-   * @param mat The matrix to be added
-   * @returns A new `Matrix2D` with transformed elments
-   */
-
   add(mat: Matrix2D) {
-    if (this.cols != mat.cols || this.rows != mat.rows)
-      throw Error("Matrices cannot be added");
-    this._raw = [];
-    for (let i = 0; i < this.rows; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < this.cols; j++)
-        row.push(this._data[i][j] + mat.data[i][j]);
-      this._raw.push(row);
+    const { rows, cols } = this;
+    const matRows = mat.rows;
+    const matCols = mat.cols;
+    const sameDims = rows === matRows && cols === matCols;
+    if (!sameDims) throw new Error("Matrix dimensions do not match");
+    const result = new Float64Array(rows * cols);
+    const a = this.data;
+    const b = mat.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      result[i] = a[i] + b[i];
     }
-
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, rows, cols);
   }
 
   addIn(mat: Matrix2D) {
-    if (this.cols != mat.cols || this.rows != mat.rows)
-      throw Error("Matrices cannot be added");
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this._data[i][j] += mat.data[i][j];
-        this.values[i][j] += mat.values[i][j];
-      }
+    const { rows, cols } = this;
+    const matRows = mat.rows;
+    const matCols = mat.cols;
+    const sameDims = rows === matRows && cols === matCols;
+    if (!sameDims) throw new Error("Matrix dimensions do not match");
+    const a = this.data;
+    const b = mat.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      a[i] += b[i];
     }
+    this.data = a;
     return this;
   }
 
-  /**
-   * Subtracts another matrix from this matrix
-   * @param mat The matrix to be subtracted
-   * @returns A new `Matrix2D` object with transformed elments
-   */
-
   sub(mat: Matrix2D) {
-    if (this.cols != mat.cols || this.rows != mat.rows)
-      throw Error("Matrices cannot be subtracted");
-    this._raw = [];
-    for (let i = 0; i < this.rows; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < this.cols; j++)
-        row.push(this._data[i][j] - mat.data[i][j]);
-      this._raw.push(row);
+    const { rows, cols } = this;
+    const matRows = mat.rows;
+    const matCols = mat.cols;
+    const sameDims = rows === matRows && cols === matCols;
+    if (!sameDims) throw new Error("Matrix dimensions do not match");
+    const result = new Float64Array(rows * cols);
+    const a = this.data;
+    const b = mat.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      result[i] = a[i] - b[i];
     }
-
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, rows, cols);
   }
 
   subIn(mat: Matrix2D) {
-    if (this.cols != mat.cols || this.rows != mat.rows)
-      throw Error("Matrices cannot be added");
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this._data[i][j] -= mat.data[i][j];
-        this.values[i][j] -= mat.values[i][j];
-      }
+    const { rows, cols } = this;
+    const matRows = mat.rows;
+    const matCols = mat.cols;
+    const sameDims = rows === matRows && cols === matCols;
+    if (!sameDims) throw new Error("Matrix dimensions do not match");
+    const a = this.data;
+    const b = mat.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      a[i] -= b[i];
     }
+    this.data = a;
     return this;
   }
 
-  /**
-   * Adds a scalar value to each element of the matrix
-   * @param val A scalar value
-   * @returns A new `Matrix2D` object with transformed elments
-   */
-
-  scalarAdd(val: number) {
-    this._raw = [];
-    for (let i = 0; i < this.rows; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < this.cols; j++) row.push(this._data[i][j] + val);
-      this._raw.push(row);
+  scalarAdd(scalar: number) {
+    const { rows, cols } = this;
+    const result = new Float64Array(rows * cols);
+    const a = this.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      result[i] = a[i] + scalar;
     }
-
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, rows, cols);
   }
 
-  scalarAddIn(val: number) {
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this._data[i][j] += val;
-        this.values[i][j] += val;
-      }
+  scalarAddIn(scalar: number) {
+    const a = this.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      a[i] += scalar;
     }
+    this.data = a;
     return this;
   }
 
-  /**
-   * Multiplies a scalar value to each element of this matrix
-   * @param mat A scalar value
-   * @returns A new `Matrix2D` object with transformed elments
-   */
-
-  scalarMul(val: number) {
-    this._raw = [];
-    for (let i = 0; i < this.rows; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < this.cols; j++) row.push(this._data[i][j] * val);
-      this._raw.push(row);
+  scalarMul(scalar: number) {
+    const { rows, cols } = this;
+    const result = new Float64Array(rows * cols);
+    const a = this.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      result[i] = a[i] * scalar;
     }
-
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, rows, cols);
   }
 
-  scalarMulIn(val: number) {
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        this._data[i][j] *= val;
-        this.values[i][j] *= val;
-      }
+  scalarMulIn(scalar: number) {
+    const a = this.data;
+    const len = a.length;
+    for (let i = 0; i < len; i++) {
+      a[i] *= scalar;
     }
+    this.data = a;
     return this;
   }
 
-  /**
-   * Matrix multiplication
-   * @param mat The matrix to be multiplied with
-   * @returns A new `Matrix2D` object with transformed elments
-   */
+  matMul(mat: Matrix2D) {
+    const aRows = this.rows;
+    const aCols = this.cols;
+    const bRows = mat.rows;
+    const bCols = mat.cols;
+    if (aCols != bRows) throw new Error("Matrices are not comformable");
 
-  matMultiply(mat: Matrix2D) {
-    if (this.cols != mat.rows) throw Error("Matrices are not comformable");
-    this._raw = [];
-    for (let i = 0; i < this.rows; i++) {
-      let row: number[] = [];
-      for (let k = 0; k < mat.cols; k++) {
-        let val = 0;
-        for (let j = 0; j < this.cols; j++) {
-          val += this._data[i][j] * mat.data[j][k];
+    const a = this.data;
+    const b = mat.data;
+    const result = new Float64Array(aRows * bCols);
+    for (let i = 0; i < aRows; i++) {
+      const aRowStart = i * aCols;
+      const resultRowStart = i * bCols;
+      for (let j = 0; j < bCols; j++) {
+        let sum = 0;
+        for (let k = 0; k < aCols; k++) {
+          sum += a[aRowStart + k] * b[k * bCols + j];
         }
-        row.push(val);
+        result[resultRowStart + j] = sum;
       }
-      this._raw.push(row);
     }
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, aRows, bCols);
   }
-
-  /**
-   * Gets the transpose of this matrix
-   * @returns A new `Matrix2D` object
-   */
 
   transpose() {
-    this._raw = [];
-    for (let i = 0; i < this.cols; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < this.rows; j++) {
-        row.push(this._data[j][i]);
+    const a = this.data;
+    const { rows, cols } = this;
+
+    const result = new Float64Array(rows * cols);
+
+    for (let i = 0; i < rows; i++) {
+      const rowOffset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        result[j * rows + i] = a[rowOffset + j];
       }
-      this._raw.push(row);
     }
 
-    return new Matrix2D(this._raw);
+    return new Matrix2D(result, rows, cols);
   }
 
   transposeIn() {
-    for (let i = 0; i < this.cols; i++) {
-      for (let j = 0; j < this.rows; j++) {
-        this._data[i][j] = this._data[j][i];
-        this.values[i][j] = this.values[j][i];
+    const a = this.data;
+    const { rows, cols } = this;
+
+    const result = new Float64Array(rows * cols);
+
+    for (let i = 0; i < rows; i++) {
+      const rowOffset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        result[j * rows + i] = a[rowOffset + j];
       }
     }
+
+    this.data = result;
+    this.rows = cols;
+    this.cols = rows;
     return this;
   }
 
-  /**
-   * Converts the matrix to a `Vector2` object
-   * @returns A `Vector2` object
-   */
-
   toVector2() {
-    if (this._data[0].length > 1) throw Error("Matrix is not linear");
-    return new Vector2(this._data[0][0], this._data[1][0]);
+    const a = this.data;
+    const { rows, cols } = this;
+    if ((rows == 2 && cols == 1) || (cols == 2 && rows == 1))
+      return new Vector2(a[0], a[1]);
+    else throw new Error("Matrix cannot be converted to Vector2");
   }
-
-  /**
-   * Converts the matrix to a `Vector3` object
-   * @returns A `Vector3` object
-   */
 
   toVector3() {
-    if (this._data[0].length > 1) throw Error("Matrix is not linear");
-    return new Vector3(this._data[0][0], this._data[1][0], this._data[2][0]);
+    const a = this.data;
+    const { rows, cols } = this;
+    if ((rows == 3 && cols == 1) || (cols == 1 && rows == 3))
+      return new Vector3(a[0], a[1], a[2]);
+    else throw new Error("Matrix cannot be converted to Vector3");
   }
 
-  /**
-   * The trace of the matrix
-   * @returns A scalar value
-   */
-
   trace() {
+    const a = this.data;
+    const { rows, cols } = this;
+    if (rows !== cols) {
+      throw new Error("Trace is only defined for square matrices.");
+    }
     let trace = 0;
-    for (let i = 0; i < this.rows; i++) {
-      trace += this._data[i][i];
+    for (let i = 0; i < rows; i++) {
+      trace += a[i * cols + i];
     }
     return trace;
   }
 
-  private calcMinor(mat: Matrix2D) {
-    return mat.data[0][0] * mat.data[1][1] - mat.data[1][0] * mat.data[0][1];
-  }
+  private getMinorMatrix(row: number, col: number): Matrix2D {
+    const { rows, cols } = this;
+    const a = this.data;
 
-  /**
-   * Gets the minor matrix of a matrix
-   * @param row The row index of the element
-   * @param col The column index of the element
-   * @param mat The matrix, defaults to `this`
-   * @returns A `Vector3` object
-   */
+    const minor = new Float64Array((rows - 1) * (cols - 1));
+    let idx = 0;
 
-  getMinorMatrix(row: number, col: number, mat: Matrix2D = this) {
-    this._raw = [];
-    for (let i = 0; i < mat.rows; i++) {
-      let rowMatrix: number[] = [];
-      for (let j = 0; j < mat.cols; j++) {
-        if (i != row && j != col) rowMatrix.push(mat.data[i][j]);
-      }
-      if (rowMatrix.length) this._raw.push(rowMatrix);
-    }
-    return new Matrix2D(this._raw);
-  }
-
-  /**
-   * The determinant of the matrix
-   * @param mat The matrix, defaults to this
-   * @returns A scalar value
-   */
-
-  det(mat: Matrix2D = this) {
-    let val = 0;
-    let [rows, cols] = mat.dim();
-    if (rows != cols) throw Error("Not a square matrix");
-    if (rows == 1 && cols == 1) return mat.data[0][0];
-    if (rows == 2 && cols == 2) return this.calcMinor(mat);
-    for (let i = 0; i < mat.cols; i++) {
-      let minorMat = this.getMinorMatrix(0, i, mat);
-      let [rows, cols] = minorMat.dim();
-      if (rows == 2 && cols == 2)
-        val += mat.data[0][i] * this.calcMinor(minorMat) * pow(-1, i);
-      else {
-        let newVal = this.det(minorMat);
-        val += mat.data[0][i] * newVal * pow(-1, i);
+    for (let i = 0; i < rows; i++) {
+      if (i === row) continue;
+      const rowOffset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        if (j === col) continue;
+        minor[idx++] = a[rowOffset + j];
       }
     }
-    return round(val * 1000) / 1000;
+    return new Matrix2D(minor, rows - 1, cols - 1);
   }
 
-  /**
-   * The adjoint of a matrix
-   * @param mat The matrix, defaults to this
-   * @returns A new `Matrix2D` object
-   */
-
-  getAdjoint(mat: Matrix2D = this) {
-    let cofactorMatrix: number[][] = [];
-
-    for (let i = 0; i < mat.rows; i++) {
-      let row: number[] = [];
-      for (let j = 0; j < mat.cols; j++) {
-        let minor = this.det(this.getMinorMatrix(i, j, mat));
-        row.push(minor * pow(-1, i + j));
-      }
-      cofactorMatrix.push(row);
+  luDecomposition(): {
+    L: Float64Array;
+    U: Float64Array;
+    pivot: number[];
+    swapCount: number;
+  } {
+    if (this.rows !== this.cols) {
+      throw new Error("LU decomposition requires a square matrix");
     }
 
-    return new Matrix2D(cofactorMatrix).transpose();
+    const n = this.rows;
+    const L = new Float64Array(n * n);
+    const U = new Float64Array(this.data);
+    const pivot = Array.from({ length: n }, (_, i) => i);
+    let swapCount = 0;
+
+    for (let i = 0; i < n; i++) {
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(U[k * n + i]) > Math.abs(U[maxRow * n + i])) {
+          maxRow = k;
+        }
+      }
+
+      if (maxRow !== i) {
+        for (let k = 0; k < n; k++) {
+          [U[i * n + k], U[maxRow * n + k]] = [U[maxRow * n + k], U[i * n + k]];
+        }
+        [pivot[i], pivot[maxRow]] = [pivot[maxRow], pivot[i]];
+        swapCount++;
+      }
+
+      if (U[i * n + i] === 0) {
+        throw new Error("Matrix is singular and cannot be decomposed");
+      }
+
+      for (let j = i + 1; j < n; j++) {
+        L[j * n + i] = U[j * n + i] / U[i * n + i];
+        for (let k = i; k < n; k++) {
+          U[j * n + k] -= L[j * n + i] * U[i * n + k];
+        }
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      L[i * n + i] = 1;
+    }
+
+    return { L, U, pivot, swapCount };
   }
 
-  /**
-   * The inverse of a matrix
-   * @returns A new `Matrix2D` object if the inverse exists, else `null`
-   */
+  det(): number {
+    const { U, swapCount } = this.luDecomposition();
+    const n = this.rows;
+
+    let determinant = 1;
+    for (let i = 0; i < n; i++) {
+      determinant *= U[i * n + i];
+    }
+
+    if (swapCount % 2 !== 0) {
+      determinant *= -1;
+    }
+
+    return round(determinant);
+  }
+
+  getAdjoint() {
+    const rows = this.rows;
+    const cols = this.cols;
+    if (rows !== cols)
+      throw new Error("Adjoint only defined for square matrices");
+    let cofactorMatrix = new Float64Array(rows * cols);
+    for (let i = 0; i < rows; i++) {
+      const rowOffset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        cofactorMatrix[rowOffset + j] =
+          this.getMinorMatrix(i, j).det() * pow(-1, i + j);
+      }
+    }
+    return new Matrix2D(cofactorMatrix, rows, cols).transpose();
+  }
 
   inverse() {
-    if (this.det(this) == 0) {
-      return null;
+    if (this.rows !== this.cols)
+      throw new Error("Inverse is only defined for square matrices");
+    const det = this.det();
+    console.log(det);
+    if (det == 0)
+      throw new Error("Inverse does not exist for a singular matrix");
+    return this.getAdjoint().scalarMul(1 / det);
+  }
+
+  exp(power: number = 2) {
+    if (this.rows !== this.cols) {
+      throw new Error("Matrix exponentiation requires a square matrix");
     }
-    return this.getAdjoint().scalarMul(1 / this.det(this));
-  }
-
-  /**
-   * Raises the matrix to a power
-   * @param power The exponent
-   * @returns A new `Matrix2D` object
-   */
-
-  exp(power: number) {
-    let res = new Matrix2D(this.values);
-    for (let i = 0; i < power - 1; i++) res = res.matMultiply(this);
-    return res;
-  }
-
-  expIn(power: number) {
-    let res = new Matrix2D(this.values);
-    for (let i = 0; i < power; i++) res = res.matMultiply(this);
-    this._data = this.toTyped(res._raw);
-    this.values = res._raw;
-    return this;
-  }
-
-  /**
-   * Deletes a column from the matrix
-   * @param idx The index of the column (0-based index)
-   * @returns A new Column
-   */
-
-  getCol(idx: number) {
-    let clone = this.clone();
-    let col = [];
-    for (let i = 0; i < this.rows; i++) {
-      col.push(clone._raw[i].splice(idx, 1)[0]);
-    }
-    return new Series(col);
-  }
-
-  /**
-   * Deletes a column from the matrix
-   * @param idx The index of the column (0-based index)
-   * @returns A new `Matrix2D` object
-   */
-
-  stripCol(idx: number) {
-    let clone = this.clone();
-    for (let i = 0; i < this.rows; i++) {
-      clone._raw[i].splice(idx, 1);
-    }
-    return new Matrix2D(clone._raw);
-  }
-
-  stripColIn(idx: number) {
-    let clone = this.clone();
-    for (let i = 0; i < this.rows; i++) {
-      clone._raw[i].splice(idx, 1);
-    }
-    this._data = this.toTyped(clone._raw);
-    this.values = clone._raw;
-    this.cols -= 1;
-    return this;
-  }
-
-  /**
-   * Deletes a row from the matrix
-   * @param idx The index of the row (0-based index)
-   * @returns A new `Matrix2D` object
-   */
-
-  stripRow(idx: number) {
-    let clone = this.clone();
-    clone._raw.splice(idx, 1);
-    return new Matrix2D(clone._raw);
-  }
-
-  stripRowIn(idx: number) {
-    let clone = this.clone();
-    clone._raw.splice(idx, 1);
-    this._data = this.toTyped(clone._raw);
-    this.values = clone._raw;
-    this.rows -= 1;
-    return this;
-  }
-
-  /**
-   * Updates an element of the matrix
-   * @param i The index of the row (0-based index)
-   * @param j The index of the column (0-based index)
-   * @param val The new value
-   * @returns The original matrix
-   */
-
-  updateValue(i: number, j: number, val: number) {
-    this._raw = this.values;
-    this._data[i][j] = val;
-    this._raw[i][j] = val;
-    return this;
-  }
-
-  /**
-   * Concatenates two matrices
-   * @param mat The matrix to be concatenated with
-   * @param axis A binary value of 0 or 1.
-   * 0 represents concatenating horizontally while 1 represents concatenating vertically.
-   * @returns A new `Matrix2D` object
-   *
-   * @example
-   *         [        [                     [
-   * [0, 1, 2],  [3, 4],      [0, 1, 2, 3, 4],
-   * [5, 6, 7] + [8, 9]   =>  [5, 6, 7, 8, 9]   (axis = 0)
-   * ]           ]            ]
-   *
-   *         [           [               [
-   * [0, 1, 2],  [3, 4, 5],      [0, 1, 2],
-   * [5, 6, 7] + ]           =>  [5, 6, 7],   (axis = 1)
-   * ]                           [3, 4, 5]
-   *                            ]
-   *
-   */
-
-  concat(mat: Matrix2D, axis: number) {
-    const [r1, c1] = this.dim();
-    const [r2, c2] = mat.dim();
-
-    if (axis == 0) {
-      if (r1 != r2)
-        throw Error(
-          `${r1}x${c1} and ${r2}x${c2} matrices cannot be concatenated in this axis`
-        );
-      this._raw = [];
-      for (let i = 0; i < this.rows; i++) {
-        let row: number[] = [];
-        for (let j = 0; j < this.cols + mat.cols; j++) {
-          if (j < this.cols) row.push(this.data[i][j]);
-          else row.push(mat.data[i][j - this.cols]);
-        }
-        this._raw.push(row);
+    let result = Matrix2D.identity(this.rows);
+    let base = this.clone();
+    while (power > 0) {
+      if (power % 2 === 1) {
+        result = result.matMul(base);
       }
-      return new Matrix2D(this._raw);
-    } else if (axis == 1) {
-      if (c1 != c2)
-        throw Error(
-          `${r1}x${c1} and ${r2}x${c2} matrices cannot be concatenated in this axis`
-        );
-      this._raw = [];
-      for (let i = 0; i < this.rows + mat.rows; i++) {
-        let row: number[] = [];
-        for (let j = 0; j < this.cols; j++) {
-          if (i < this.rows) row.push(this._data[i][j]);
-          else row.push(mat.data[i - this.rows][j]);
-        }
-        this._raw.push(row);
+      base = base.matMul(base);
+      power = Math.floor(power / 2);
+    }
+    return result;
+  }
+
+  stripRow(idx: number): Matrix2D {
+    const { rows, cols, data } = this;
+    if (idx < 0 || idx >= rows) throw new Error("Invalid row index");
+
+    const result = new Float64Array((rows - 1) * cols);
+    let k = 0;
+    for (let i = 0; i < rows; i++) {
+      if (i === idx) continue;
+      const offset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        result[k++] = data[offset + j];
       }
-      return new Matrix2D(this._raw);
     }
+    return new Matrix2D(result, rows - 1, cols);
   }
 
-  /**
-   * Replaces a column of the matrix with a new set of values
-   * @param idx The index of the target column (0-based index)
-   * @param _data An array consisting of the new values
-   * @returns A new `Matrix2D` object
-   */
+  stripRowIn(idx: number): this {
+    const { rows, cols, data } = this;
+    if (idx < 0 || idx >= rows) throw new Error("Invalid row index");
 
-  replaceCol(idx: number, data: number[]) {
-    let raw = this.clone().raw;
-    for (let i = 0; i < this.rows; i++) {
-      raw[i][idx] = data[i];
+    const newData = new Float64Array((rows - 1) * cols);
+    let k = 0;
+    for (let i = 0; i < rows; i++) {
+      if (i === idx) continue;
+      const offset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        newData[k++] = data[offset + j];
+      }
     }
-    return new Matrix2D(raw);
-  }
 
-  replaceColIn(idx: number, data: number[]) {
-    let raw = this.clone().raw;
-    for (let i = 0; i < this.rows; i++) {
-      raw[i][idx] = data[i];
-    }
-    this._data = this.toTyped(raw);
-    this.values = raw;
+    this.data = newData;
+    this.rows = rows - 1;
     return this;
   }
 
-  /**
-   * Replaces a row of the matrix with a new set of values
-   * @param idx The index of the target row (0-based index)
-   * @param _data An array consisting of the new values
-   * @returns A new `Matrix2D` object
-   */
+  stripCol(idx: number): Matrix2D {
+    const { rows, cols, data } = this;
+    if (idx < 0 || idx >= cols) throw new Error("Invalid column index");
 
-  replaceRow(idx: number, data: number[]) {
-    let raw = this.clone()._raw;
-    for (let i = 0; i < this.rows; i++) {
-      raw[idx][i] = data[i];
+    const result = new Float64Array(rows * (cols - 1));
+    let k = 0;
+    for (let i = 0; i < rows; i++) {
+      const offset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        if (j === idx) continue;
+        result[k++] = data[offset + j];
+      }
     }
-    return new Matrix2D(raw);
+    return new Matrix2D(result, rows, cols - 1);
   }
 
-  replaceRowIn(idx: number, data: number[]) {
-    let raw = this.clone()._raw;
-    for (let i = 0; i < this.rows; i++) {
-      raw[idx][i] = data[i];
+  stripColIn(idx: number): this {
+    const { rows, cols, data } = this;
+    if (idx < 0 || idx >= cols) throw new Error("Invalid column index");
+
+    const newData = new Float64Array(rows * (cols - 1));
+    let k = 0;
+    for (let i = 0; i < rows; i++) {
+      const offset = i * cols;
+      for (let j = 0; j < cols; j++) {
+        if (j === idx) continue;
+        newData[k++] = data[offset + j];
+      }
     }
-    this._data = this.toTyped(raw);
-    this.values = raw;
+
+    this.data = newData;
+    this.cols = cols - 1;
     return this;
   }
 
-  /**
-   * Checks whether two matrices are equal
-   * @param mat A `Matrix2D` object
-   */
+  replaceCol(colIndex: number, values: Float64Array): Matrix2D {
+    const newData = this.data.slice();
+    if (values.length !== this.rows) {
+      throw new Error("Column length mismatch");
+    }
 
-  isEqual(mat: Matrix2D) {
-    if (this.rows != mat.rows || this.cols != mat.cols)
-      throw Error("Dimensions do not match");
     for (let i = 0; i < this.rows; i++) {
+      newData[i * this.cols + colIndex] = values[i];
+    }
+
+    return new Matrix2D(newData, this.rows, this.cols);
+  }
+
+  replaceColIn(colIndex: number, values: Float64Array): this {
+    if (values.length !== this.rows) {
+      throw new Error("Column length mismatch");
+    }
+
+    for (let i = 0; i < this.rows; i++) {
+      this.data[i * this.cols + colIndex] = values[i];
+    }
+    return this;
+  }
+
+  replaceRowIn(rowIndex: number, values: Float64Array): this {
+    if (values.length !== this.cols) {
+      throw new Error("Row length mismatch");
+    }
+
+    const offset = rowIndex * this.cols;
+    for (let j = 0; j < this.cols; j++) {
+      this.data[offset + j] = values[j];
+    }
+    return this;
+  }
+  replaceRow(rowIndex: number, values: Float64Array): Matrix2D {
+    const newData = this.data.slice();
+    if (values.length !== this.cols) {
+      throw new Error("Row length mismatch");
+    }
+
+    const offset = rowIndex * this.cols;
+    for (let j = 0; j < this.cols; j++) {
+      newData[offset + j] = values[j];
+    }
+
+    return new Matrix2D(newData, this.rows, this.cols);
+  }
+
+  updateVal(row: number, col: number, value: number) {
+    this.data[row * this.cols + col] = value;
+  }
+
+  concatHorizontal(other: Matrix2D): Matrix2D {
+    if (this.rows !== other.rows) {
+      throw new Error(
+        "Matrices must have the same number of rows for horizontal concatenation"
+      );
+    }
+
+    const rows = this.rows;
+    const cols = this.cols + other.cols;
+    const result = new Float64Array(rows * cols);
+
+    for (let i = 0; i < rows; i++) {
+      const rowOffsetThis = i * this.cols;
+      const rowOffsetOther = i * other.cols;
+      const rowOffsetResult = i * cols;
+
       for (let j = 0; j < this.cols; j++) {
-        if (this._data[i][j] != mat.data[i][j]) return false;
+        result[rowOffsetResult + j] = this.data[rowOffsetThis + j];
+      }
+
+      for (let j = 0; j < other.cols; j++) {
+        result[rowOffsetResult + this.cols + j] =
+          other.data[rowOffsetOther + j];
       }
     }
-    return true;
+
+    return new Matrix2D(result, rows, cols);
   }
 
-  /**
-   * Checks the orthogonality of the matrix
-   * @returns A `boolean`
-   */
-
-  isOrthogonal() {
-    const inv = this.inverse();
-    if (inv) {
-      if (inv.isEqual(this.transpose())) return true;
+  concatVertical(other: Matrix2D): Matrix2D {
+    if (this.cols !== other.cols) {
+      throw new Error(
+        "Matrices must have the same number of columns for vertical concatenation"
+      );
     }
-    return false;
+
+    const rows = this.rows + other.rows;
+    const cols = this.cols;
+    const result = new Float64Array(rows * cols);
+
+    result.set(this.data, 0);
+
+    result.set(other.data, this.data.length);
+
+    return new Matrix2D(result, rows, cols);
   }
 
-  /**
-   * Converts the matrix to a Cramer object
-   * @returns A new `Cramer` object
-   */
+  getRank(epsilon = 1e-10): number {
+    const m = this.rows;
+    const n = this.cols;
+    const A = new Float64Array(this.data);
+    let rank = 0;
 
-  private checkSubmatrices(size: number, currSize: number) {
-    for (let i = 0; i < size - currSize + 1; i++) {
-      for (let j = 0; j < size - currSize + 1; j++) {
-        let matrix: number[][] = [];
-        for (let x = 0; x < currSize; x++) {
-          let row: number[] = [];
-          for (let y = 0; y < currSize; y++) {
-            row.push(this._data[x + i][y + j]);
-          }
-          matrix.push(row);
+    const usedRows = new Set<number>();
+
+    for (let col = 0; col < n; col++) {
+      let pivotRow = -1;
+      for (let row = 0; row < m; row++) {
+        if (!usedRows.has(row) && Math.abs(A[row * n + col]) > epsilon) {
+          pivotRow = row;
+          break;
         }
-        const a = new Matrix2D(matrix);
-        if (a.det() != 0) return currSize;
+      }
+
+      if (pivotRow === -1) continue;
+
+      usedRows.add(pivotRow);
+      rank++;
+
+      for (let row = 0; row < m; row++) {
+        if (row === pivotRow) continue;
+
+        const factor = A[row * n + col] / A[pivotRow * n + col];
+        for (let k = col; k < n; k++) {
+          A[row * n + k] -= factor * A[pivotRow * n + k];
+        }
       }
     }
-    return 0;
+
+    return rank;
   }
 
-  /**
-   * The Rank of a matrix
-   */
+  getRow(i: number): Series {
+    const { cols, data } = this;
+    const result = new Float64Array(cols);
+    const offset = i * cols;
 
-  getRank(currSize = this.dim()[0] - 1): number {
-    const [rows, cols] = this.dim();
-    if (rows != cols) throw Error("Not a square matrix");
-    if (this.det() != 0) return rows;
-    const a = this.checkSubmatrices(rows, currSize);
-    if (a) return a;
-    else if (a == 0 && currSize == 1) return 0;
-    else return this.getRank(currSize - 1);
+    for (let j = 0; j < cols; j++) {
+      result[j] = data[offset + j];
+    }
+
+    return new Series(result);
   }
 
-  /**
-   * Convert the matrix (2x3 or 3x4) to a `Cramer` object
-   * @returns A `Cramer` object
-   */
-
-  toCramer() {
-    return new Cramer(this.values);
+  getColumn(j: number): Series {
+    const { rows, cols } = this;
+    const a = this.data;
+    const result = new Float64Array(rows);
+    for (let i = 0; i < rows; i++) {
+      result[i] = a[i * cols + j];
+    }
+    return new Series(result);
   }
 
-  /**
-   * Get the covariance matrix with respect to another matrix
-   * @param mat The second matrix
-   * @returns A new `Matrix2D` object
-   */
+  cov(): Matrix2D {
+    const n = this.rows;
+    const d = this.cols;
+    const cov = new Float64Array(d * d);
+    const columns: Series[] = [];
 
-  cov(mat: Matrix2D) {
-    let matrix: number[][] = [];
-    for (let i = 0; i < this.cols; i++) {
-      matrix.push([]);
-      for (let j = 0; j < this.cols; j++) {
-        let aCol = this.getCol(i);
-        let bCol = mat.getCol(j);
-        let covSum = sum(
-          [aCol, bCol],
-          (k, a, b) => (a.data[k] - aCol.aMean()) * (b.data[k] - bCol.aMean())
-        );
-        matrix[i].push(covSum / (aCol.size - 1));
+    for (let j = 0; j < d; j++) {
+      columns.push(this.getColumn(j));
+    }
+
+    const means = columns.map((col) => col.aMean());
+
+    for (let i = 0; i < d; i++) {
+      for (let j = i; j < d; j++) {
+        const covIJ =
+          sum([columns[i], columns[j]], (k, xi, xj) => {
+            return (xi.data[k] - means[i]) * (xj.data[k] - means[j]);
+          }) /
+          (n - 1);
+
+        cov[i * d + j] = covIJ;
+        cov[j * d + i] = covIJ;
       }
     }
-    return new Matrix2D(matrix);
+
+    return new Matrix2D(cov, d, d);
   }
 
-  corr(mat: Matrix2D) {
-    let matrix: number[][] = [];
-    for (let i = 0; i < this.cols; i++) {
-      matrix.push([]);
-      for (let j = 0; j < this.cols; j++) {
-        let aCol = this.getCol(i);
-        let bCol = mat.getCol(j);
-        let aStd = Math.sqrt(
-          sum(
-            [aCol],
-            (i, a) => Math.pow(a.data[i] - aCol.aMean(), 2) / (aCol.size - 1)
-          )
-        );
-        let bStd = Math.sqrt(
-          sum(
-            [bCol],
-            (i, b) => Math.pow(b.data[i] - bCol.aMean(), 2) / (bCol.size - 1)
-          )
-        );
-        let cov =
-          sum(
-            [aCol, bCol],
-            (k, a, b) => (a.data[k] - aCol.aMean()) * (b.data[k] - bCol.aMean())
-          ) /
-          (aCol.size - 1);
+  corr(): Matrix2D {
+    const cov = this.cov();
+    const d = cov.rows;
+    const data = cov.data;
+    const corr = new Float64Array(d * d);
 
-        matrix[i].push(cov / (aStd * bStd));
+    const std = new Float64Array(d);
+    for (let i = 0; i < d; i++) {
+      std[i] = Math.sqrt(data[i * d + i]);
+    }
+
+    for (let i = 0; i < d; i++) {
+      for (let j = i; j < d; j++) {
+        const denom = std[i] * std[j];
+        const corrIJ = denom !== 0 ? data[i * d + j] / denom : 0;
+        corr[i * d + j] = corrIJ;
+        corr[j * d + i] = corrIJ;
       }
     }
-    return new Matrix2D(matrix);
+
+    return new Matrix2D(corr, d, d);
   }
 }

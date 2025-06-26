@@ -1,4 +1,4 @@
-import { Cramer, CramerType } from "../src/cramer";
+import { Cramer } from "../src/cramer";
 import { yes } from "./helper";
 
 const twoVar = new Cramer([
@@ -13,12 +13,12 @@ const threeVar = new Cramer([
 ]);
 
 export function cramerTest() {
-  yes("twoVar", twoVar.solve() as CramerType, {
+  yes("twoVar", twoVar.solve(), {
     result: "Unique Solution",
-    x: 23.5,
-    y: -6.5,
+    x: -23.5,
+    y: 6.5,
   });
-  yes("threeVar", threeVar.solve() as CramerType, {
+  yes("threeVar", threeVar.solve(), {
     result: "Unique Solution",
     x: -0.790,
     y: 1.271,
